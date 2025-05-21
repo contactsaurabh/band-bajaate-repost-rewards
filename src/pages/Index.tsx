@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import PostCard from "@/components/PostCard";
 import PointsCard from "@/components/PointsCard";
@@ -8,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
 
 const Index = () => {
   const { posts, isLoading } = usePosts();
