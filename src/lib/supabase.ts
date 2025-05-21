@@ -3,30 +3,48 @@ import { createClient } from '@supabase/supabase-js';
 import { Database } from './database.types';
 
 // Supabase configuration from environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Create Supabase client
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+// Check if Supabase credentials are available
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Supabase credentials are missing. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables.');
+}
+
+// Create Supabase client with fallback empty strings (will throw appropriate errors)
+export const supabase = createClient<Database>(
+  supabaseUrl || 'https://placeholder.supabase.co', // This will still trigger an error but prevent immediate crash
+  supabaseAnonKey || 'placeholder_key'
+);
 
 // Auth helper functions
 export const getCurrentUser = async () => {
-  const { data: { user } } = await supabase.auth.getUser();
-  return user;
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    return user;
+  } catch (error) {
+    console.error('Error getting current user:', error);
+    return null;
+  }
 };
 
 export const getCurrentUserProfile = async () => {
-  const user = await getCurrentUser();
-  
-  if (!user) return null;
-  
-  const { data } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
+  try {
+    const user = await getCurrentUser();
     
-  return data;
+    if (!user) return null;
+    
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+      
+    return data;
+  } catch (error) {
+    console.error('Error getting user profile:', error);
+    return null;
+  }
 };
 
 // Export auth functions
