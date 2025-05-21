@@ -65,6 +65,15 @@ export const authUtils = {
     return await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: window.location.origin + '/reset-password',
     });
+  },
+  
+  signInWithGoogle: async () => {
+    return await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin
+      }
+    });
   }
 };
 

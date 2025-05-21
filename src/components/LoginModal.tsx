@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { Google } from "lucide-react";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -24,7 +26,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [activeTab, setActiveTab] = useState("login");
-  const { login, register, isLoading } = useAuth();
+  const { login, register, isLoading, signInWithGoogle } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +53,15 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+      // No need to close modal as Google auth will redirect
+    } catch (error) {
+      console.error("Google sign in failed:", error);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
@@ -60,6 +71,23 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
             Sign in to start sharing and earning points.
           </DialogDescription>
         </DialogHeader>
+        
+        <Button 
+          variant="outline" 
+          className="w-full flex items-center justify-center gap-2"
+          onClick={handleGoogleSignIn}
+          disabled={isLoading}
+        >
+          <Google className="h-5 w-5" /> 
+          Sign in with Google
+        </Button>
+        
+        <div className="relative my-4">
+          <Separator />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="bg-background px-2 text-xs text-muted-foreground">OR</span>
+          </div>
+        </div>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">

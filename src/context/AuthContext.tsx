@@ -10,6 +10,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  signInWithGoogle: () => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -19,6 +20,7 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => {},
   register: async () => {},
   logout: () => {},
+  signInWithGoogle: async () => {},
   isAuthenticated: false
 });
 
@@ -133,6 +135,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
   
+  const signInWithGoogle = async () => {
+    try {
+      const { error } = await authUtils.signInWithGoogle();
+      if (error) {
+        toast.error(`Google sign in failed: ${error.message}`);
+        throw error;
+      }
+    } catch (error: any) {
+      toast.error(`Google sign in failed: ${error.message}`);
+      throw error;
+    }
+  };
+  
   const logout = async () => {
     try {
       await authUtils.logout();
@@ -151,6 +166,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         register,
         logout,
+        signInWithGoogle,
         isAuthenticated: !!user
       }}
     >
