@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import PostCard from "@/components/PostCard";
 import PointsCard from "@/components/PointsCard";
@@ -152,3 +153,4 @@ const Index = () => {
 };
 
 export default Index;
+
