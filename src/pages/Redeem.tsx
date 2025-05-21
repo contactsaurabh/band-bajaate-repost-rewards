@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,12 +14,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { redemptionOptions, processRedemption, getRedemptionHistory } from "@/lib/redemption";
 
 const Redeem = () => {
   const { user, isAuthenticated } = useAuth();
   const [selectedOption, setSelectedOption] = useState("");
   const [paymentEmail, setPaymentEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [redemptionHistory, setRedemptionHistory] = useState<any[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   // If not authenticated, redirect to home
   if (!isAuthenticated) {
@@ -29,25 +32,47 @@ const Redeem = () => {
   const minimumPoints = 500;
   const canRedeem = user?.points && user.points >= minimumPoints;
 
-  const redeemOptions = [
-    { value: "paypal", label: "PayPal - 500 points = $5", points: 500, amount: 5 },
-    { value: "bankTransfer", label: "Bank Transfer - 1000 points = $10", points: 1000, amount: 10 },
-    { value: "giftCard", label: "Gift Card - 2000 points = $20", points: 2000, amount: 20 },
-  ];
+  // Get valid redemption options based on user's points
+  const validOptions = redemptionOptions.filter(option => user?.points && user.points >= option.points);
 
-  const validOptions = redeemOptions.filter(option => user?.points && user.points >= option.points);
+  useEffect(() => {
+    const fetchRedemptionHistory = async () => {
+      if (!isAuthenticated) return;
+      
+      setIsLoadingHistory(true);
+      try {
+        const history = await getRedemptionHistory();
+        setRedemptionHistory(history);
+      } catch (error) {
+        console.error("Failed to fetch redemption history:", error);
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    };
+
+    fetchRedemptionHistory();
+  }, [isAuthenticated]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedOption || !paymentEmail) return;
     
+    const option = redemptionOptions.find(opt => opt.value === selectedOption);
+    if (!option) return;
+    
     setIsSubmitting(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      toast.success("Redemption successful! You'll receive your payment soon.");
+      await processRedemption(selectedOption, option.points, paymentEmail);
+      
+      // Refresh redemption history
+      const history = await getRedemptionHistory();
+      setRedemptionHistory(history);
+      
+      // Clear form
+      setSelectedOption("");
+      setPaymentEmail("");
     } catch (error) {
-      toast.error("Failed to process redemption. Please try again.");
+      console.error("Failed to process redemption:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -130,6 +155,48 @@ const Redeem = () => {
               )}
             </CardContent>
           </Card>
+          
+          {redemptionHistory.length > 0 && (
+            <Card className="bbr-card mt-6">
+              <CardHeader>
+                <CardTitle className="text-2xl">Redemption History</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {isLoadingHistory ? (
+                    <p>Loading history...</p>
+                  ) : (
+                    redemptionHistory.map((item) => (
+                      <div key={item.id} className="border rounded-md p-4">
+                        <div className="flex justify-between items-center mb-1">
+                          <div className="font-medium">
+                            {item.points_amount} Points → ${item.money_amount}
+                          </div>
+                          <div className={`text-xs px-2 py-1 rounded ${
+                            item.status === 'pending' 
+                              ? 'bg-yellow-100 text-yellow-800' 
+                              : item.status === 'processed' 
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-red-100 text-red-800'
+                          }`}>
+                            {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                          </div>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Via: {item.payment_method === 'paypal' ? 'PayPal' : 
+                                item.payment_method === 'bankTransfer' ? 'Bank Transfer' : 'Gift Card'} 
+                          to {item.payment_email}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Requested on {new Date(item.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
         
         <div className="space-y-6">
@@ -137,7 +204,7 @@ const Redeem = () => {
             <CardContent className="p-6">
               <h3 className="font-semibold mb-3">Redemption Options</h3>
               <div className="space-y-4">
-                {redeemOptions.map((option) => (
+                {redemptionOptions.map((option) => (
                   <div 
                     key={option.value} 
                     className={`border rounded-md p-4 transition-colors ${

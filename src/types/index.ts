@@ -21,3 +21,22 @@ export interface Post {
   repostCount: number;
   reposted: boolean; // Whether the current user has reposted this
 }
+
+export interface Redemption {
+  id: string;
+  userId: string;
+  pointsAmount: number;
+  moneyAmount: number;
+  paymentEmail: string;
+  status: 'pending' | 'processed' | 'failed';
+  paymentMethod: string;
+  createdAt: string;
+  processedAt?: string;
+}
+
+export interface RedemptionOption {
+  value: string;
+  label: string;
+  points: number;
+  amount: number;
+}

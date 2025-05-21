@@ -6,11 +6,13 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -18,17 +20,34 @@ interface LoginModalProps {
 }
 
 const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login, isLoading } = useAuth();
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [activeTab, setActiveTab] = useState("login");
+  const { login, register, isLoading } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(username, password);
+      await login(email, password);
       onClose();
     } catch (error) {
       console.error("Login failed:", error);
+    }
+  };
+  
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password !== confirmPassword) {
+      alert("Passwords don't match!");
+      return;
+    }
+    
+    try {
+      await register(email, password);
+      setActiveTab("login");
+    } catch (error) {
+      console.error("Registration failed:", error);
     }
   };
 
@@ -36,46 +55,106 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">Login to Band Bajaate Raho</DialogTitle>
+          <DialogTitle className="text-2xl font-bold">Band Bajaate Raho</DialogTitle>
           <DialogDescription>
-            Connect with your X account to start sharing and earning points.
+            Sign in to start sharing and earning points.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-          <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
-            <Input
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter your username"
-              required
-              className="bbr-input"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              required
-              className="bbr-input"
-            />
-          </div>
-          <Button 
-            type="submit" 
-            disabled={isLoading} 
-            className="w-full bbr-gradient text-white"
-          >
-            {isLoading ? "Logging in..." : "Login with X"}
-          </Button>
-          <div className="text-center text-sm text-muted-foreground">
-            <p>For demo, use any username/password</p>
-          </div>
-        </form>
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="login">Login</TabsTrigger>
+            <TabsTrigger value="register">Register</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="login">
+            <form onSubmit={handleLogin} className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label htmlFor="login-email">Email</Label>
+                <Input
+                  id="login-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required
+                  className="bbr-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="login-password">Password</Label>
+                <Input
+                  id="login-password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  required
+                  className="bbr-input"
+                />
+              </div>
+              <Button 
+                type="submit" 
+                disabled={isLoading} 
+                className="w-full bbr-gradient text-white"
+              >
+                {isLoading ? "Logging in..." : "Login"}
+              </Button>
+            </form>
+          </TabsContent>
+          
+          <TabsContent value="register">
+            <form onSubmit={handleRegister} className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label htmlFor="register-email">Email</Label>
+                <Input
+                  id="register-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required
+                  className="bbr-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="register-password">Password</Label>
+                <Input
+                  id="register-password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Create a password"
+                  required
+                  className="bbr-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">Confirm Password</Label>
+                <Input
+                  id="confirm-password"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm your password"
+                  required
+                  className="bbr-input"
+                />
+              </div>
+              <Button 
+                type="submit" 
+                disabled={isLoading} 
+                className="w-full bbr-gradient text-white"
+              >
+                {isLoading ? "Creating account..." : "Create account"}
+              </Button>
+            </form>
+          </TabsContent>
+        </Tabs>
+        
+        <DialogFooter className="text-center text-sm text-muted-foreground flex flex-col">
+          <p>By continuing, you agree to our Terms and Privacy Policy</p>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
