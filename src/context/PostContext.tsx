@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect } from "react";
 import { Post } from "@/types";
 import { toast } from "sonner";
@@ -37,26 +36,37 @@ export const PostProvider = ({ children }: { children: ReactNode }) => {
       
       if (data) {
         // Transform data to match our Post type
-        const transformedPosts: Post[] = await Promise.all(data.map(async (post) => {
-          // Check if the current user has reposted this post
-          const { reposted } = await postUtils.checkIfReposted(post.id);
+        const transformedPosts: Post[] = await Promise.all(data.map(async (post: any) => {
+          if (!post || !post.id) {
+            console.error('Invalid post data:', post);
+            return null;
+          }
           
-          // Safely access properties
-          return {
-            id: post.id,
-            tweetUrl: post.tweet_url,
-            tweetId: post.tweet_id,
-            userId: post.user_id,
-            username: post.profiles?.username || 'unknown',
-            userProfileImage: post.profiles?.profile_image,
-            content: post.content || undefined,
-            createdAt: post.created_at,
-            repostCount: (post.repost_count && post.repost_count[0]?.count) || 0,
-            reposted: isAuthenticated ? reposted : false
-          };
+          try {
+            // Check if the current user has reposted this post
+            const { reposted } = await postUtils.checkIfReposted(post.id);
+            
+            // Safely access properties
+            return {
+              id: post.id,
+              tweetUrl: post.tweet_url,
+              tweetId: post.tweet_id,
+              userId: post.user_id,
+              username: post.profiles?.username || 'unknown',
+              userProfileImage: post.profiles?.profile_image,
+              content: post.content || undefined,
+              createdAt: post.created_at,
+              repostCount: (post.repost_count && post.repost_count[0]?.count) || 0,
+              reposted: isAuthenticated ? reposted : false
+            };
+          } catch (error) {
+            console.error('Error processing post:', error);
+            return null;
+          }
         }));
         
-        setPosts(transformedPosts);
+        // Filter out any null posts (from errors)
+        setPosts(transformedPosts.filter(Boolean) as Post[]);
       }
     } catch (error) {
       console.error('Error fetching posts:', error);

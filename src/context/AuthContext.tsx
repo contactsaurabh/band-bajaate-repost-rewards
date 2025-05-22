@@ -46,12 +46,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           if (profile) {
             setUser({
               id: session.user.id,
-              username: profile.username || session.user.email?.split('@')[0] || 'user',
-              profileImage: profile.profile_image || undefined,
-              points: profile.points,
-              postsShared: profile.posts_shared,
-              repostsReceived: profile.reposts_received,
-              repostsMade: profile.reposts_made
+              username: profile?.username || session.user.email?.split('@')[0] || 'user',
+              profileImage: profile?.profile_image || undefined,
+              points: profile?.points || 0,
+              postsShared: profile?.posts_shared || 0,
+              repostsReceived: profile?.reposts_received || 0,
+              repostsMade: profile?.reposts_made || 0
             });
           }
         }
@@ -74,12 +74,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           if (profile) {
             setUser({
               id: session.user.id,
-              username: profile.username || session.user.email?.split('@')[0] || 'user',
-              profileImage: profile.profile_image || undefined,
-              points: profile.points,
-              postsShared: profile.posts_shared,
-              repostsReceived: profile.reposts_received,
-              repostsMade: profile.reposts_made
+              username: profile?.username || session.user.email?.split('@')[0] || 'user',
+              profileImage: profile?.profile_image || undefined,
+              points: profile?.points || 0,
+              postsShared: profile?.posts_shared || 0,
+              repostsReceived: profile?.reposts_received || 0,
+              repostsMade: profile?.reposts_made || 0
             });
           }
           setIsLoading(false);
