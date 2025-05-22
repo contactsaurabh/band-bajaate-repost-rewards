@@ -6,6 +6,12 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://qoobtaqybiumriieaorc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvb2J0YXF5Yml1bXJpaWVhb3JjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc4ODg4MzEsImV4cCI6MjA2MzQ2NDgzMX0.H7M-lBtvKHxFCKRT7EP0CLs6KKE5IeTpctqgrTDHsL0";
 
+// Get the current base URL (works in development and production)
+const getRedirectUrl = () => {
+  const url = new URL(window.location.href);
+  return `${url.protocol}//${url.host}`;
+};
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
@@ -13,6 +19,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   auth: {
     storage: localStorage,
     persistSession: true,
-    autoRefreshToken: true
+    autoRefreshToken: true,
+    flowType: 'pkce' // More secure authentication flow
   }
 });

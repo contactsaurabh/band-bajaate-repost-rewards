@@ -6,6 +6,15 @@ import { Database } from './database.types';
 const supabaseUrl = "https://qoobtaqybiumriieaorc.supabase.co";
 const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvb2J0YXF5Yml1bXJpaWVhb3JjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc4ODg4MzEsImV4cCI6MjA2MzQ2NDgzMX0.H7M-lBtvKHxFCKRT7EP0CLs6KKE5IeTpctqgrTDHsL0";
 
+// Get the current base URL (works in development and production)
+const getRedirectUrl = () => {
+  if (typeof window !== 'undefined') {
+    const url = new URL(window.location.href);
+    return `${url.protocol}//${url.host}`;
+  }
+  return '';
+};
+
 // Create Supabase client
 export const supabase = createClient<Database>(
   supabaseUrl,
@@ -14,7 +23,8 @@ export const supabase = createClient<Database>(
     auth: {
       storage: localStorage,
       persistSession: true,
-      autoRefreshToken: true
+      autoRefreshToken: true,
+      flowType: 'pkce' // More secure authentication flow
     }
   }
 );
@@ -65,15 +75,18 @@ export const authUtils = {
   
   resetPassword: async (email: string) => {
     return await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + '/reset-password',
+      redirectTo: getRedirectUrl() + '/reset-password',
     });
   },
   
   signInWithGoogle: async () => {
+    const redirectTo = getRedirectUrl();
+    console.log("Redirecting to:", redirectTo);
+    
     return await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin
+        redirectTo: redirectTo
       }
     });
   }
