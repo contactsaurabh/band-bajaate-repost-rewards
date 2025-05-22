@@ -9,8 +9,10 @@ const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 // Get the current base URL (works in development and production)
 const getRedirectUrl = () => {
   if (typeof window !== 'undefined') {
-    const url = new URL(window.location.href);
-    return `${url.protocol}//${url.host}`;
+    // Use the deployment URL or preview URL directly
+    const deployUrl = window.location.origin;
+    console.log("Using redirect URL from lib/supabase:", deployUrl);
+    return deployUrl;
   }
   return '';
 };
@@ -24,7 +26,8 @@ export const supabase = createClient<Database>(
       storage: localStorage,
       persistSession: true,
       autoRefreshToken: true,
-      flowType: 'pkce' // More secure authentication flow
+      flowType: 'pkce', // More secure authentication flow
+      redirectTo: getRedirectUrl() // Set redirect URL for all auth operations
     }
   }
 );
@@ -80,13 +83,13 @@ export const authUtils = {
   },
   
   signInWithGoogle: async () => {
-    const redirectTo = getRedirectUrl();
-    console.log("Redirecting to:", redirectTo);
+    const redirectUrl = getRedirectUrl();
+    console.log("Redirecting to Google auth with URL:", redirectUrl);
     
     return await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: redirectTo
+        redirectTo: redirectUrl
       }
     });
   }

@@ -15,6 +15,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Mail } from "lucide-react";
+import { toast } from "sonner";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -35,30 +36,36 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
       onClose();
     } catch (error) {
       console.error("Login failed:", error);
+      toast.error(`Login failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
   
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      alert("Passwords don't match!");
+      toast.error("Passwords don't match!");
       return;
     }
     
     try {
       await register(email, password);
       setActiveTab("login");
+      toast.success("Registration successful! Please check your email for verification.");
     } catch (error) {
       console.error("Registration failed:", error);
+      toast.error(`Registration failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithGoogle();
+      console.log("Starting Google sign-in process");
+      const result = await signInWithGoogle();
+      console.log("Google sign-in result:", result);
       // No need to close modal as Google auth will redirect
     } catch (error) {
       console.error("Google sign in failed:", error);
+      toast.error(`Google sign in failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 

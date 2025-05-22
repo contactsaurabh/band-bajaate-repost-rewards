@@ -8,8 +8,10 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 
 // Get the current base URL (works in development and production)
 const getRedirectUrl = () => {
-  const url = new URL(window.location.href);
-  return `${url.protocol}//${url.host}`;
+  // Use the deployment URL or preview URL directly
+  const deployUrl = window.location.origin;
+  console.log("Using redirect URL:", deployUrl);
+  return deployUrl;
 };
 
 // Import the supabase client like this:
@@ -20,6 +22,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
-    flowType: 'pkce' // More secure authentication flow
+    flowType: 'pkce', // More secure authentication flow
+    redirectTo: getRedirectUrl() // Set redirect URL for all auth operations
   }
 });
