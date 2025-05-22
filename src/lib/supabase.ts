@@ -49,12 +49,17 @@ export const getCurrentUserProfile = async () => {
     
     if (!user) return null;
     
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
       .single();
       
+    if (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
+    }
+    
     return data;
   } catch (error) {
     console.error('Error getting user profile:', error);
