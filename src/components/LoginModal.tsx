@@ -14,7 +14,6 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-// Replace Google with Mail which is available in lucide-react
 import { Mail } from "lucide-react";
 
 interface LoginModalProps {

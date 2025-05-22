@@ -9,7 +9,167 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      point_transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          description: string
+          id: string
+          reference_id: string | null
+          transaction_type: string
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          description: string
+          id?: string
+          reference_id?: string | null
+          transaction_type: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          description?: string
+          id?: string
+          reference_id?: string | null
+          transaction_type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      posts: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          id: string
+          tweet_id: string
+          tweet_url: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          tweet_id: string
+          tweet_url: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          tweet_id?: string
+          tweet_url?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          id: string
+          points: number
+          posts_shared: number
+          profile_image: string | null
+          reposts_made: number
+          reposts_received: number
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          points?: number
+          posts_shared?: number
+          profile_image?: string | null
+          reposts_made?: number
+          reposts_received?: number
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          points?: number
+          posts_shared?: number
+          profile_image?: string | null
+          reposts_made?: number
+          reposts_received?: number
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
+      redemptions: {
+        Row: {
+          created_at: string | null
+          id: string
+          money_amount: number
+          payment_email: string
+          payment_method: string
+          points_amount: number
+          processed_at: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          money_amount: number
+          payment_email: string
+          payment_method: string
+          points_amount: number
+          processed_at?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          money_amount?: number
+          payment_email?: string
+          payment_method?: string
+          points_amount?: number
+          processed_at?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      reposts: {
+        Row: {
+          created_at: string | null
+          id: string
+          post_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          post_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          post_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reposts_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

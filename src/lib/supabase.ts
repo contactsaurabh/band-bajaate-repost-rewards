@@ -2,19 +2,21 @@
 import { createClient } from '@supabase/supabase-js';
 import { Database } from './database.types';
 
-// Supabase configuration from environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Supabase configuration - use direct URLs and keys for reliability
+const supabaseUrl = "https://qoobtaqybiumriieaorc.supabase.co";
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvb2J0YXF5Yml1bXJpaWVhb3JjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc4ODg4MzEsImV4cCI6MjA2MzQ2NDgzMX0.H7M-lBtvKHxFCKRT7EP0CLs6KKE5IeTpctqgrTDHsL0";
 
-// Check if Supabase credentials are available
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Supabase credentials are missing. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables.');
-}
-
-// Create Supabase client with fallback empty strings (will throw appropriate errors)
+// Create Supabase client
 export const supabase = createClient<Database>(
-  supabaseUrl || 'https://placeholder.supabase.co', // This will still trigger an error but prevent immediate crash
-  supabaseAnonKey || 'placeholder_key'
+  supabaseUrl,
+  supabaseAnonKey,
+  {
+    auth: {
+      storage: localStorage,
+      persistSession: true,
+      autoRefreshToken: true
+    }
+  }
 );
 
 // Auth helper functions
