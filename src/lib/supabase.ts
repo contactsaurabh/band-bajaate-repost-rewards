@@ -9,10 +9,8 @@ const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 // Get the current base URL (works in development and production)
 const getRedirectUrl = () => {
   if (typeof window !== 'undefined') {
-    // Use the deployment URL or preview URL directly
-    const deployUrl = window.location.origin;
-    console.log("Using redirect URL from lib/supabase:", deployUrl);
-    return deployUrl;
+    const url = new URL(window.location.href);
+    return `${url.protocol}//${url.host}`;
   }
   return '';
 };
@@ -26,10 +24,7 @@ export const supabase = createClient<Database>(
       storage: localStorage,
       persistSession: true,
       autoRefreshToken: true,
-      flowType: 'pkce', // More secure authentication flow
-      detectSessionInUrl: true,
-      // Match the redirect URL to the actual origin
-      site: getRedirectUrl()
+      flowType: 'pkce' // More secure authentication flow
     }
   }
 );
@@ -37,11 +32,7 @@ export const supabase = createClient<Database>(
 // Auth helper functions
 export const getCurrentUser = async () => {
   try {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error) {
-      console.error('Error getting current user:', error);
-      return null;
-    }
+    const { data: { user } } = await supabase.auth.getUser();
     return user;
   } catch (error) {
     console.error('Error getting current user:', error);
@@ -55,17 +46,12 @@ export const getCurrentUserProfile = async () => {
     
     if (!user) return null;
     
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
       .single();
       
-    if (error) {
-      console.error('Error fetching user profile:', error);
-      return null;
-    }
-    
     return data;
   } catch (error) {
     console.error('Error getting user profile:', error);
@@ -94,13 +80,13 @@ export const authUtils = {
   },
   
   signInWithGoogle: async () => {
-    const redirectUrl = getRedirectUrl();
-    console.log("Redirecting to Google auth with URL:", redirectUrl);
+    const redirectTo = getRedirectUrl();
+    console.log("Redirecting to:", redirectTo);
     
     return await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: redirectUrl
+        redirectTo: redirectTo
       }
     });
   }

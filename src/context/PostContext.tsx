@@ -41,7 +41,6 @@ export const PostProvider = ({ children }: { children: ReactNode }) => {
           // Check if the current user has reposted this post
           const { reposted } = await postUtils.checkIfReposted(post.id);
           
-          // Safely access properties
           return {
             id: post.id,
             tweetUrl: post.tweet_url,
@@ -51,7 +50,7 @@ export const PostProvider = ({ children }: { children: ReactNode }) => {
             userProfileImage: post.profiles?.profile_image,
             content: post.content || undefined,
             createdAt: post.created_at,
-            repostCount: (post.repost_count && post.repost_count[0]?.count) || 0,
+            repostCount: post.repost_count?.[0]?.count || 0,
             reposted: isAuthenticated ? reposted : false
           };
         }));
