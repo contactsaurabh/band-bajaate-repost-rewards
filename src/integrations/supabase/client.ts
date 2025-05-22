@@ -23,6 +23,8 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     persistSession: true,
     autoRefreshToken: true,
     flowType: 'pkce', // More secure authentication flow
-    redirectTo: getRedirectUrl() // Set redirect URL for all auth operations
+    detectSessionInUrl: true,
+    // Set site URL for proper auth flow
+    site: getRedirectUrl()
   }
 });

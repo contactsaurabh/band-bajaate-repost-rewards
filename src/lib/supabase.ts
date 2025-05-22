@@ -27,7 +27,9 @@ export const supabase = createClient<Database>(
       persistSession: true,
       autoRefreshToken: true,
       flowType: 'pkce', // More secure authentication flow
-      redirectTo: getRedirectUrl() // Set redirect URL for all auth operations
+      detectSessionInUrl: true,
+      // Match the redirect URL to the actual origin
+      site: getRedirectUrl()
     }
   }
 );
@@ -35,7 +37,11 @@ export const supabase = createClient<Database>(
 // Auth helper functions
 export const getCurrentUser = async () => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error) {
+      console.error('Error getting current user:', error);
+      return null;
+    }
     return user;
   } catch (error) {
     console.error('Error getting current user:', error);
