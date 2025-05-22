@@ -14,7 +14,8 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { Google } from "lucide-react";
+// Replace Google with Mail which is available in lucide-react
+import { Mail } from "lucide-react";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -78,7 +79,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
           onClick={handleGoogleSignIn}
           disabled={isLoading}
         >
-          <Google className="h-5 w-5" /> 
+          <Mail className="h-5 w-5" /> 
           Sign in with Google
         </Button>
         
