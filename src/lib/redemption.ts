@@ -1,6 +1,7 @@
 
 import { supabase, getCurrentUser } from "./supabase";
 import { toast } from "sonner";
+import { Database } from './database.types';
 
 // Define redemption options for the app
 export const redemptionOptions = [
@@ -31,19 +32,21 @@ export const processRedemption = async (
   }
   
   try {
-    const { data: profile } = await supabase
+    // Check if user has enough points
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('points')
       .eq('id', user.id)
       .single();
       
+    if (profileError) throw profileError;
     if (!profile || profile.points < pointsAmount) {
       toast.error("Insufficient points for redemption");
       throw new Error("Insufficient points");
     }
     
     // Create the redemption record
-    const { data, error } = await supabase
+    const { data: redemptionData, error: redemptionError } = await supabase
       .from('redemptions')
       .insert({
         user_id: user.id,
@@ -52,33 +55,37 @@ export const processRedemption = async (
         payment_method: paymentMethod,
         payment_email: paymentEmail,
         status: 'pending'
-      })
+      } as any)
       .select();
       
-    if (error) throw error;
+    if (redemptionError) throw redemptionError;
     
     // Update user points
-    await supabase
+    const { error: updateError } = await supabase
       .from('profiles')
       .update({ 
         points: profile.points - pointsAmount,
         updated_at: new Date().toISOString()
-      })
+      } as any)
       .eq('id', user.id);
       
+    if (updateError) throw updateError;
+      
     // Record transaction
-    await supabase
+    const { error: transactionError } = await supabase
       .from('point_transactions')
       .insert({
         user_id: user.id,
         amount: -pointsAmount,
         description: `Redemption via ${paymentMethod}`,
         transaction_type: 'REDEMPTION',
-        reference_id: data?.[0]?.id
-      });
+        reference_id: redemptionData?.[0]?.id
+      } as any);
+    
+    if (transactionError) throw transactionError;
     
     toast.success("Redemption request submitted successfully");
-    return data?.[0];
+    return redemptionData?.[0];
   } catch (error: any) {
     toast.error(`Redemption failed: ${error.message}`);
     throw error;

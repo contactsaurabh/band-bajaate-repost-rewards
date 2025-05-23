@@ -38,6 +38,8 @@ export const PostProvider = ({ children }: { children: ReactNode }) => {
       if (data) {
         // Transform data to match our Post type
         const transformedPosts: Post[] = await Promise.all(data.map(async (post) => {
+          if (!post) return null;
+          
           // Check if the current user has reposted this post
           const { reposted } = await postUtils.checkIfReposted(post.id);
           
@@ -55,7 +57,8 @@ export const PostProvider = ({ children }: { children: ReactNode }) => {
           };
         }));
         
-        setPosts(transformedPosts);
+        // Filter out any null values
+        setPosts(transformedPosts.filter(Boolean) as Post[]);
       }
     } catch (error) {
       console.error('Error fetching posts:', error);

@@ -41,9 +41,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         if (session?.user) {
           // Get user profile data
-          const profile = await getCurrentUserProfile();
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
           
-          if (profile) {
+          if (profile && !error) {
             setUser({
               id: session.user.id,
               username: profile.username || session.user.email?.split('@')[0] || 'user',
@@ -69,9 +73,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       async (event, session) => {
         if (event === 'SIGNED_IN' && session?.user) {
           setIsLoading(true);
-          const profile = await getCurrentUserProfile();
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
           
-          if (profile) {
+          if (profile && !error) {
             setUser({
               id: session.user.id,
               username: profile.username || session.user.email?.split('@')[0] || 'user',
