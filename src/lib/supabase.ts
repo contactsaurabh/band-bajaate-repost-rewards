@@ -1,255 +1,94 @@
 
-import { createClient } from '@supabase/supabase-js';
-import { Database } from './database.types';
+// This is a mock implementation for demo purposes
+// No actual Supabase calls are made in this demo
 
-// Supabase configuration - use direct URLs and keys for reliability
-const supabaseUrl = "https://qoobtaqybiumriieaorc.supabase.co";
-const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvb2J0YXF5Yml1bXJpaWVhb3JjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc4ODg4MzEsImV4cCI6MjA2MzQ2NDgzMX0.H7M-lBtvKHxFCKRT7EP0CLs6KKE5IeTpctqgrTDHsL0";
+import { User } from "@/types";
 
-// Get the current base URL (works in development and production)
-const getRedirectUrl = () => {
-  if (typeof window !== 'undefined') {
-    const url = new URL(window.location.href);
-    return `${url.protocol}//${url.host}`;
-  }
-  return '';
+// Mock current user (matches the one in AuthContext)
+const MOCK_USER = {
+  id: "demo-user-123",
+  email: "demo@example.com",
+  username: "demouser",
+  profile_image: "https://picsum.photos/id/1012/200",
+  points: 75,
+  posts_shared: 5,
+  reposts_received: 12,
+  reposts_made: 8
 };
 
-// Create Supabase client
-export const supabase = createClient<Database>(
-  supabaseUrl,
-  supabaseAnonKey,
-  {
-    auth: {
-      storage: localStorage,
-      persistSession: true,
-      autoRefreshToken: true,
-      flowType: 'pkce' // More secure authentication flow
-    }
-  }
-);
+// Dummy client for demo purposes
+export const supabase = {
+  auth: {
+    getSession: async () => ({ data: { session: { user: MOCK_USER } } }),
+    getUser: async () => ({ data: { user: MOCK_USER } }),
+    signInWithPassword: async () => ({ data: { user: MOCK_USER }, error: null }),
+    signUp: async () => ({ data: { user: MOCK_USER }, error: null }),
+    signOut: async () => ({ error: null }),
+    signInWithOAuth: async () => ({ error: null }),
+    onAuthStateChange: () => ({ 
+      data: { 
+        subscription: { 
+          unsubscribe: () => {} 
+        } 
+      } 
+    })
+  },
+  from: () => ({
+    select: () => ({
+      eq: () => ({
+        single: async () => ({ data: MOCK_USER, error: null }),
+        maybeSingle: async () => ({ data: MOCK_USER, error: null })
+      }),
+      order: () => ({
+        limit: async () => ({ data: [], error: null })
+      })
+    }),
+    insert: () => ({
+      select: async () => ({ data: [{ id: 'new-id' }], error: null })
+    }),
+    update: () => ({
+      eq: async () => ({ error: null })
+    })
+  }),
+  channel: () => ({
+    on: () => ({
+      subscribe: () => ({})
+    }),
+    subscribe: () => ({})
+  }),
+  removeChannel: () => {}
+};
 
 // Auth helper functions
 export const getCurrentUser = async () => {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    return user;
-  } catch (error) {
-    console.error('Error getting current user:', error);
-    return null;
-  }
+  return MOCK_USER;
 };
 
 export const getCurrentUserProfile = async () => {
-  try {
-    const user = await getCurrentUser();
-    
-    if (!user) return null;
-    
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-      
-    return data;
-  } catch (error) {
-    console.error('Error getting user profile:', error);
-    return null;
-  }
+  return MOCK_USER;
 };
 
 // Export auth functions
 export const authUtils = {
-  login: async (email: string, password: string) => {
-    return await supabase.auth.signInWithPassword({ email, password });
-  },
-  
-  register: async (email: string, password: string) => {
-    return await supabase.auth.signUp({ email, password });
-  },
-  
-  logout: async () => {
-    return await supabase.auth.signOut();
-  },
-  
-  resetPassword: async (email: string) => {
-    return await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: getRedirectUrl() + '/reset-password',
-    });
-  },
-  
-  signInWithGoogle: async () => {
-    const redirectTo = getRedirectUrl();
-    console.log("Redirecting to:", redirectTo);
-    
-    return await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: redirectTo
-      }
-    });
-  }
+  login: async () => ({ data: { user: MOCK_USER }, error: null }),
+  register: async () => ({ data: { user: MOCK_USER }, error: null }),
+  logout: async () => ({ error: null }),
+  resetPassword: async () => ({ error: null }),
+  signInWithGoogle: async () => ({ error: null })
 };
 
 // Post related functions
 export const postUtils = {
-  getPosts: async (sortBy = 'recent', limit = 20) => {
-    const query = supabase
-      .from('posts')
-      .select(`
-        *,
-        profiles:user_id (username, profile_image),
-        reposts:reposts (user_id),
-        repost_count:reposts (count)
-      `);
-    
-    if (sortBy === 'recent') {
-      query.order('created_at', { ascending: false });
-    } else if (sortBy === 'popular') {
-      query.order('repost_count', { ascending: false });
-    }
-    
-    return await query.limit(limit);
-  },
-  
-  getUserPosts: async (userId: string) => {
-    return await supabase
-      .from('posts')
-      .select(`
-        *,
-        profiles:user_id (username, profile_image),
-        reposts:reposts (user_id),
-        repost_count:reposts (count)
-      `)
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-  },
-  
-  getUserReposts: async (userId: string) => {
-    return await supabase
-      .from('reposts')
-      .select(`
-        posts:post_id (
-          *,
-          profiles:user_id (username, profile_image),
-          repost_count:reposts (count)
-        )
-      `)
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-  },
-  
-  createPost: async (postData: { tweet_url: string, tweet_id: string, content?: string }) => {
-    const user = await getCurrentUser();
-    
-    if (!user) throw new Error('User not authenticated');
-    
-    return await supabase
-      .from('posts')
-      .insert({
-        ...postData,
-        user_id: user.id
-      })
-      .select();
-  },
-  
-  createRepost: async (postId: string) => {
-    const user = await getCurrentUser();
-    
-    if (!user) throw new Error('User not authenticated');
-    
-    return await supabase
-      .from('reposts')
-      .insert({
-        post_id: postId,
-        user_id: user.id
-      })
-      .select();
-  },
-  
-  checkIfReposted: async (postId: string) => {
-    const user = await getCurrentUser();
-    
-    if (!user) return { reposted: false };
-    
-    const { data } = await supabase
-      .from('reposts')
-      .select('id')
-      .eq('post_id', postId)
-      .eq('user_id', user.id)
-      .maybeSingle();
-    
-    return { reposted: !!data };
-  }
+  getPosts: async () => ({ data: [], error: null }),
+  getUserPosts: async () => ({ data: [], error: null }),
+  getUserReposts: async () => ({ data: [], error: null }),
+  createPost: async () => ({ data: [{ id: 'new-post-id' }], error: null }),
+  createRepost: async () => ({ error: null }),
+  checkIfReposted: async () => ({ reposted: false })
 };
 
 // Redemption related functions
 export const redemptionUtils = {
-  createRedemption: async (data: { 
-    points_amount: number, 
-    money_amount: number,
-    payment_method: string,
-    payment_email: string 
-  }) => {
-    const user = await getCurrentUser();
-    
-    if (!user) throw new Error('User not authenticated');
-    
-    // First check if user has enough points
-    const profile = await getCurrentUserProfile();
-    
-    if (!profile || profile.points < data.points_amount) {
-      throw new Error('Insufficient points');
-    }
-    
-    // Begin transaction to create redemption and reduce points
-    const { data: redemption, error } = await supabase
-      .from('redemptions')
-      .insert({
-        user_id: user.id,
-        points_amount: data.points_amount,
-        money_amount: data.money_amount,
-        payment_method: data.payment_method,
-        payment_email: data.payment_email
-      })
-      .select()
-      .single();
-    
-    if (error) throw error;
-    
-    // Reduce points from user's profile
-    await supabase
-      .from('profiles')
-      .update({
-        points: profile.points - data.points_amount,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', user.id);
-    
-    // Record transaction
-    await supabase
-      .from('point_transactions')
-      .insert({
-        user_id: user.id,
-        amount: -data.points_amount,
-        description: `Points redeemed for ${data.payment_method}`,
-        reference_id: redemption.id,
-        transaction_type: 'REDEMPTION'
-      });
-      
-    return redemption;
-  },
-  
-  getUserRedemptions: async () => {
-    const user = await getCurrentUser();
-    
-    if (!user) throw new Error('User not authenticated');
-    
-    return await supabase
-      .from('redemptions')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-  }
+  createRedemption: async () => ({ id: 'new-redemption-id' }),
+  getUserRedemptions: async () => ({ data: [], error: null })
 };

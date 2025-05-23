@@ -1,8 +1,18 @@
 
 import React, { createContext, useState, useContext, ReactNode, useEffect } from "react";
 import { User } from "@/types";
-import { supabase, authUtils, getCurrentUserProfile } from "@/lib/supabase";
 import { toast } from "sonner";
+
+// Mock data for demo
+const MOCK_USER: User = {
+  id: "demo-user-123",
+  username: "demouser",
+  profileImage: "https://picsum.photos/id/1012/200",
+  points: 75,
+  postsShared: 5,
+  repostsReceived: 12,
+  repostsMade: 8
+};
 
 interface AuthContextType {
   user: User | null;
@@ -30,126 +40,56 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Initialize auth state and listen for changes
+  // Initialize with mock data
   useEffect(() => {
-    const initAuth = async () => {
-      setIsLoading(true);
-      
-      try {
-        // Get current session
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session?.user) {
-          // Get user profile data
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (profile && !error) {
-            setUser({
-              id: session.user.id,
-              username: profile.username || session.user.email?.split('@')[0] || 'user',
-              profileImage: profile.profile_image || undefined,
-              points: profile.points,
-              postsShared: profile.posts_shared,
-              repostsReceived: profile.reposts_received,
-              repostsMade: profile.reposts_made
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initAuth();
-    
-    // Subscribe to auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
-          setIsLoading(true);
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (profile && !error) {
-            setUser({
-              id: session.user.id,
-              username: profile.username || session.user.email?.split('@')[0] || 'user',
-              profileImage: profile.profile_image || undefined,
-              points: profile.points,
-              postsShared: profile.posts_shared,
-              repostsReceived: profile.reposts_received,
-              repostsMade: profile.reposts_made
-            });
-          }
-          setIsLoading(false);
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-        }
-      }
-    );
-
-    // Cleanup subscription on unmount
-    return () => {
-      subscription.unsubscribe();
-    };
+    // Simulate loading
+    setTimeout(() => {
+      setUser(MOCK_USER);
+      setIsLoading(false);
+    }, 1000);
   }, []);
   
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const { data, error } = await authUtils.login(email, password);
-      
-      if (error) {
-        throw error;
-      }
-      
-      if (data?.user) {
+      // Demo login - always succeeds
+      setTimeout(() => {
+        setUser(MOCK_USER);
         toast.success("Login successful");
-      }
+        setIsLoading(false);
+      }, 800);
     } catch (error: any) {
       toast.error(`Login failed: ${error.message}`);
-      throw error;
-    } finally {
       setIsLoading(false);
+      throw error;
     }
   };
   
   const register = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const { data, error } = await authUtils.register(email, password);
-      
-      if (error) {
-        throw error;
-      }
-      
-      if (data?.user) {
-        toast.success("Registration successful! Please check your email for verification.");
-      }
+      // Demo register - always succeeds
+      setTimeout(() => {
+        setUser(MOCK_USER);
+        toast.success("Registration successful!");
+        setIsLoading(false);
+      }, 800);
     } catch (error: any) {
       toast.error(`Registration failed: ${error.message}`);
-      throw error;
-    } finally {
       setIsLoading(false);
+      throw error;
     }
   };
   
   const signInWithGoogle = async () => {
     try {
-      const { error } = await authUtils.signInWithGoogle();
-      if (error) {
-        toast.error(`Google sign in failed: ${error.message}`);
-        throw error;
-      }
+      setIsLoading(true);
+      // Demo Google sign in - always succeeds
+      setTimeout(() => {
+        setUser(MOCK_USER);
+        toast.success("Google sign-in successful!");
+        setIsLoading(false);
+      }, 800);
     } catch (error: any) {
       toast.error(`Google sign in failed: ${error.message}`);
       throw error;
@@ -158,7 +98,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   
   const logout = async () => {
     try {
-      await authUtils.logout();
       setUser(null);
       toast.success("Logged out successfully");
     } catch (error) {
